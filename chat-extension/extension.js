@@ -18,14 +18,14 @@ function activate(context) {
         ws.on('open', () => console.log('WebSocket connected'));
         ws.on('close', () => console.log('WebSocket closed'));
         
-        // Gérer les messages reçus du serveur
         ws.on('message', data => {
             console.log('Message reçu du serveur:', data.toString());
             try {
                 const parsedData = JSON.parse(data.toString());
                 panel.webview.postMessage({
                     type: parsedData.type === 'user-message' ? 'sent' : 'received',
-                    text: parsedData.content
+                    text: parsedData.content,
+                    isToolOutput: parsedData.content.includes('[FILE]') || parsedData.content.includes('[DIR]')
                 });
             } catch (error) {
                 console.error('Erreur parsing message:', error);
@@ -36,7 +36,11 @@ function activate(context) {
         <html>
             <head>
                 <style>
-                    body { margin: 0; padding: 15px; }
+                    body { 
+                        margin: 0; 
+                        padding: 15px;
+                        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                    }
                     .chat-container { 
                         height: 100vh; 
                         display: flex; 
@@ -51,9 +55,10 @@ function activate(context) {
                     }
                     .message { 
                         margin: 5px 0; 
-                        padding: 8px; 
-                        border-radius: 4px;
-                        max-width: 80%;
+                        padding: 12px; 
+                        border-radius: 10px;
+                        max-width: 85%;
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                     }
                     .sent { 
                         background: var(--vscode-button-background); 
@@ -64,12 +69,52 @@ function activate(context) {
                         background: var(--vscode-input-background);
                         align-self: flex-start;
                     }
-                    #messageInput {
-                        padding: 8px;
+                    .tool-output {
+                        font-family: monospace;
+                        white-space: pre-wrap;
+                        background: var(--vscode-editor-background);
                         border: 1px solid var(--vscode-input-border);
-                        border-radius: 4px;
+                        padding: 15px;
+                        border-radius: 8px;
+                        width: 100%;
+                        box-sizing: border-box;
+                        margin-top: 8px;
+                    }
+                    .tool-output-card {
+                        background: var(--vscode-editor-background);
+                        border: 1px solid var(--vscode-input-border);
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-top: 10px;
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
+                    .tool-output-item {
+                        display: flex;
+                        align-items: center;
+                        padding: 5px 0;
+                        border-bottom: 1px solid var(--vscode-input-border);
+                    }
+                    .tool-output-item:last-child {
+                        border-bottom: none;
+                    }
+                    .tool-output-icon {
+                        margin-right: 10px;
+                        color: var(--vscode-symbolIcon-folderForeground);
+                    }
+                    #messageInput {
+                        padding: 12px;
+                        border: 1px solid var(--vscode-input-border);
+                        border-radius: 8px;
                         background: var(--vscode-input-background);
                         color: var(--vscode-input-foreground);
+                        font-size: 14px;
+                        width: 100%;
+                        box-sizing: border-box;
+                    }
+                    #messageInput:focus {
+                        outline: none;
+                        border-color: var(--vscode-focusBorder);
                     }
                 </style>
             </head>
@@ -83,10 +128,38 @@ function activate(context) {
                     const messageInput = document.getElementById('messageInput');
                     const messagesDiv = document.getElementById('messages');
 
-                    function addMessage(text, type) {
+                    function formatToolOutput(content) {
+                        const lines = content.split('\\n');
+                        let html = '<div class="tool-output-card">';
+                        
+                        lines.forEach(line => {
+                            const isFile = line.includes('[FILE]');
+                            const isDir = line.includes('[DIR]');
+                            const name = line.replace('[FILE] ', '').replace('[DIR] ', '');
+                            
+                            if (isFile || isDir) {
+                                html += \`
+                                    <div class="tool-output-item">
+                                        <span class="tool-output-icon">\${isDir ? '📁' : '📄'}</span>
+                                        <span>\${name}</span>
+                                    </div>
+                                \`;
+                            }
+                        });
+                        
+                        return html + '</div>';
+                    }
+
+                    function addMessage(text, type, isToolOutput = false) {
                         const messageDiv = document.createElement('div');
-                        messageDiv.textContent = text;
                         messageDiv.className = 'message ' + type;
+                        
+                        if (isToolOutput) {
+                            messageDiv.innerHTML = formatToolOutput(text);
+                        } else {
+                            messageDiv.textContent = text;
+                        }
+                        
                         messagesDiv.appendChild(messageDiv);
                         messagesDiv.scrollTop = messagesDiv.scrollHeight;
                     }
@@ -108,7 +181,7 @@ function activate(context) {
 
                     window.addEventListener('message', event => {
                         const message = event.data;
-                        addMessage(message.text, message.type);
+                        addMessage(message.text, message.type, message.isToolOutput);
                     });
                 </script>
             </body>
@@ -125,7 +198,6 @@ function activate(context) {
             context.subscriptions
         );
 
-        // Nettoyer la connexion WebSocket à la fermeture
         panel.onDidDispose(() => {
             ws.close();
         });
