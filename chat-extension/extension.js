@@ -37,13 +37,13 @@ function activate(context) {
         }
 
         // Connexion WebSocket
-        const ws = new WebSocket('ws://localhost:3000');
+        const ws = new WebSocket('ws://localhost:3001');
 
         ws.on('open', () => {
-            console.log('Connected to chat server');
+            console.log('Connected to Python chat server');
             chatPanel.webview.postMessage({
                 type: 'status',
-                message: 'Connecté au serveur de chat'
+                message: 'Connecté au serveur de chat Python'
             });
         });
 
