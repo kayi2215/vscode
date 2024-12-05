@@ -1,238 +1,109 @@
 const vscode = require('vscode');
 const WebSocket = require('ws');
 
-let chatPanel = undefined;
+let chatPanel;
 
 function activate(context) {
-    console.log('Chat Plugin is now active!');
-    
-    // Register the command
     let disposable = vscode.commands.registerCommand('vscode-chat-plugin.startChat', () => {
-        console.log('Start Chat command executed');
-        vscode.window.showInformationMessage('Starting chat...');
-        
-        try {
-            if (chatPanel) {
-                chatPanel.reveal(vscode.ViewColumn.Two);
-                return;
-            }
+        chatPanel = vscode.window.createWebviewPanel(
+            'chatView',
+            'Chat',
+            vscode.ViewColumn.Two,
+            { enableScripts: true }
+        );
 
-            // Créer un nouveau panel
-            chatPanel = vscode.window.createWebviewPanel(
-                'chatView',
-                'Chat',
-                vscode.ViewColumn.Two,
-                {
-                    enableScripts: true
-                }
-            );
+        chatPanel.webview.html = getWebviewContent();
 
-            // Contenu HTML du chat
-            chatPanel.webview.html = getWebviewContent();
-            vscode.window.showInformationMessage('Chat panel created successfully!');
-
-        } catch (error) {
-            console.error('Error creating chat panel:', error);
-            vscode.window.showErrorMessage('Failed to create chat panel: ' + error.message);
-        }
-
-        // Connexion WebSocket
         const ws = new WebSocket('ws://localhost:3001');
 
         ws.on('open', () => {
-            console.log('Connected to Python chat server');
             chatPanel.webview.postMessage({
                 type: 'status',
-                message: 'Connecté au serveur de chat Python'
+                message: 'Connecté'
             });
         });
 
         ws.on('message', (data) => {
-            console.log('Received from server:', data.toString());
-            // Envoyer le message reçu au webview
             chatPanel.webview.postMessage({
                 type: 'receiveMessage',
                 message: data.toString()
             });
         });
 
-        // Gérer les messages du webview
         chatPanel.webview.onDidReceiveMessage(
             message => {
-                switch (message.command) {
-                    case 'sendMessage':
-                        console.log('Sending to server:', message.text);
-                        ws.send(message.text);
-                        return;
+                if (message.command === 'sendMessage') {
+                    ws.send(message.text);
                 }
             },
             undefined,
             context.subscriptions
         );
 
-        chatPanel.onDidDispose(
-            () => {
-                chatPanel = undefined;
-                ws.close();
-            },
-            null,
-            context.subscriptions
-        );
+        chatPanel.onDidDispose(() => {
+            chatPanel = undefined;
+            ws.close();
+        });
     });
 
     context.subscriptions.push(disposable);
-    vscode.window.showInformationMessage('Chat Plugin is ready! Use Command+Shift+C to open chat.');
 }
 
 function getWebviewContent() {
     return `<!DOCTYPE html>
-    <html lang="en">
+    <html>
     <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chat</title>
         <style>
-            body {
-                margin: 0;
-                padding: 15px;
-                background: var(--vscode-editor-background);
-                color: var(--vscode-editor-foreground);
-            }
-            #chat-container {
-                display: flex;
-                flex-direction: column;
-                height: calc(100vh - 30px);
-            }
-            #messages {
-                flex-grow: 1;
-                overflow-y: auto;
-                margin-bottom: 15px;
-                padding: 10px;
-                border: 1px solid var(--vscode-input-border);
-                border-radius: 4px;
-            }
-            .message {
-                margin: 5px 0;
-                padding: 8px;
-                border-radius: 4px;
-                background: var(--vscode-input-background);
-                word-wrap: break-word;
-            }
-            .message.sent {
-                background: var(--vscode-button-background);
-                color: var(--vscode-button-foreground);
-                margin-left: 20%;
-            }
-            .message.received {
-                background: var(--vscode-input-background);
-                margin-right: 20%;
-            }
-            #input-container {
-                display: flex;
-                gap: 10px;
-            }
-            #message-input {
-                flex-grow: 1;
-                padding: 8px;
-                border: 1px solid var(--vscode-input-border);
-                background: var(--vscode-input-background);
-                color: var(--vscode-input-foreground);
-                border-radius: 4px;
-            }
-            button {
-                padding: 8px 15px;
-                background: var(--vscode-button-background);
-                color: var(--vscode-button-foreground);
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
-            }
-            button:hover {
-                background: var(--vscode-button-hoverBackground);
-            }
-            .status {
-                text-align: center;
-                color: var(--vscode-descriptionForeground);
-                margin: 5px 0;
-                font-style: italic;
-            }
+            .message { margin: 10px; padding: 10px; }
+            .sent { background: #dcf8c6; }
+            .received { background: #e8e8e8; }
         </style>
     </head>
     <body>
-        <div id="chat-container">
-            <div id="messages"></div>
-            <div id="input-container">
-                <input type="text" id="message-input" placeholder="Tapez votre message...">
-                <button id="send-button">Envoyer</button>
-            </div>
-        </div>
+        <div id="messages"></div>
+        <input id="messageInput" type="text"/>
+        <button onclick="sendMessage()">Envoyer</button>
         <script>
             const vscode = acquireVsCodeApi();
-            const messagesContainer = document.getElementById('messages');
-            const messageInput = document.getElementById('message-input');
-            const sendButton = document.getElementById('send-button');
-
-            function addMessage(content, type = 'received') {
-                const messageElement = document.createElement('div');
-                messageElement.className = 'message ' + type;
-                messageElement.textContent = content;
-                messagesContainer.appendChild(messageElement);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-
-            function addStatus(content) {
-                const statusElement = document.createElement('div');
-                statusElement.className = 'status';
-                statusElement.textContent = content;
-                messagesContainer.appendChild(statusElement);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-
+            const messageInput = document.getElementById('messageInput');
+            
             function sendMessage() {
-                const message = messageInput.value.trim();
-                if (message) {
-                    addMessage(message, 'sent');
+                const text = messageInput.value;
+                if (text) {
                     vscode.postMessage({
                         command: 'sendMessage',
                         text: JSON.stringify({
                             type: 'user-message',
-                            content: message
+                            content: text
                         })
                     });
+                    addMessage(text, 'sent');
                     messageInput.value = '';
                 }
             }
 
-            sendButton.addEventListener('click', sendMessage);
-            messageInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    sendMessage();
-                }
-            });
+            function addMessage(content, type) {
+                const div = document.createElement('div');
+                div.className = 'message ' + type;
+                div.textContent = content;
+                document.getElementById('messages').appendChild(div);
+            }
 
             window.addEventListener('message', event => {
                 const message = event.data;
-                switch (message.type) {
-                    case 'receiveMessage':
-                        try {
-                            const parsedMessage = JSON.parse(message.message);
-                            if (parsedMessage.type === 'ai-message') {
-                                addMessage(parsedMessage.content, 'received');
-                            } else if (parsedMessage.type === 'error') {
-                                addStatus(parsedMessage.content);
-                            }
-                        } catch (e) {
-                            addMessage(message.message, 'received');
-                        }
-                        break;
-                    case 'status':
-                        addStatus(message.message);
-                        break;
+                if (message.type === 'receiveMessage') {
+                    try {
+                        const parsed = JSON.parse(message.message);
+                        addMessage(parsed.content, 'received');
+                    } catch {
+                        addMessage(message.message, 'received');
+                    }
                 }
             });
 
-            // Ajouter un message initial
-            addStatus('Connexion au serveur de chat...');
+            messageInput.addEventListener('keypress', e => {
+                if (e.key === 'Enter') sendMessage();
+            });
         </script>
     </body>
     </html>`;
@@ -240,7 +111,4 @@ function getWebviewContent() {
 
 function deactivate() {}
 
-module.exports = {
-    activate,
-    deactivate
-};
+module.exports = { activate, deactivate };

@@ -1,14 +1,14 @@
 {
   "name": "vscode-chat-plugin",
-  "displayName": "VS Code Chat Plugin",
-  "description": "A chat plugin for VS Code with AI capabilities",
+  "displayName": "VSCode Chat Plugin",
+  "description": "Chat Plugin for VSCode",
   "version": "0.0.1",
+  "publisher": "younesbami",
+  "repository": "",
   "engines": {
     "vscode": "^1.60.0"
   },
-  "categories": [
-    "Other"
-  ],
+  "categories": ["Other"],
   "activationEvents": [
     "*"
   ],
@@ -17,22 +17,27 @@
     "commands": [
       {
         "command": "vscode-chat-plugin.startChat",
-        "category": "Chat",
-        "title": "Open AI Chat"
+        "title": "Start Chat"
       }
     ],
     "keybindings": [
       {
         "command": "vscode-chat-plugin.startChat",
-        "key": "ctrl+shift+c",
-        "mac": "cmd+shift+c"
+        "key": "cmd+i",
+        "mac": "cmd+i",
+        "when": "editorTextFocus"
       }
     ]
   },
+  "scripts": {
+    "package": "vsce package"
+  },
   "dependencies": {
-    "ws": "^8.14.2"
+    "ws": "^8.2.3"
   },
   "devDependencies": {
-    "@types/vscode": "^1.95.0"
+    "@types/vscode": "^1.60.0",
+    "@types/node": "^14.0.0",
+    "vsce": "^1.103.1"
   }
 }

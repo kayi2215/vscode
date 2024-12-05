@@ -3,6 +3,12 @@ import json
 import websockets
 from ai_handler import AIHandler
 from decouple import config
+import logging
+
+# Configuration des logs
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger('websockets')
+logger.setLevel(logging.DEBUG)
 
 class ChatServer:
     def __init__(self):
@@ -11,17 +17,18 @@ class ChatServer:
 
     async def handle_message(self, websocket, message):
         try:
+            print(f"Message reçu: {message}")
             data = json.loads(message)
             if data['type'] == 'user-message':
-                # Traiter le message avec l'IA
+                print(f"Traitement du message: {data['content']}")
                 response = await self.ai_handler.process_message(data['content'])
-                
-                # Envoyer la réponse
+                print(f"Réponse: {response}")
                 await websocket.send(json.dumps({
                     'type': 'ai-message',
                     'content': response
                 }))
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as e:
+            print(f"Erreur JSON: {e}")
             await websocket.send(json.dumps({
                 'type': 'error',
                 'content': 'Format de message invalide'
@@ -34,33 +41,32 @@ class ChatServer:
             }))
 
     async def handle_connection(self, websocket):
+        print(f"Nouvelle connexion: {websocket.remote_address}")
         self.clients.add(websocket)
         try:
-            # Message de bienvenue
             await websocket.send(json.dumps({
                 'type': 'ai-message',
-                'content': 'Bonjour ! Je suis votre assistant IA Python. Comment puis-je vous aider aujourd\'hui ?'
+                'content': 'Bonjour ! Je suis votre assistant IA Python. Comment puis-je vous aider ?'
             }))
 
-            # Boucle de gestion des messages
             async for message in websocket:
                 await self.handle_message(websocket, message)
         except websockets.exceptions.ConnectionClosed:
-            print("Client disconnected")
+            print("Client déconnecté")
         finally:
             self.clients.remove(websocket)
 
 async def main():
     server = ChatServer()
     port = 3001
+    print(f"Démarrage du serveur sur le port {port}...")
     async with websockets.serve(server.handle_connection, "localhost", port):
         print(f"Server running on ws://localhost:{port}")
         try:
-            await asyncio.Future()  # run forever
+            await asyncio.Future()
         except KeyboardInterrupt:
             print("\nShutting down server...")
         finally:
-            # Fermer proprement le client HTTP
             await server.ai_handler.client.http_client.aclose()
 
 if __name__ == "__main__":
@@ -68,3 +74,5 @@ if __name__ == "__main__":
         asyncio.run(main())
     except KeyboardInterrupt:
         print("\nServer stopped by user")
+    except Exception as e:
+        print(f"Erreur fatale: {str(e)}")
