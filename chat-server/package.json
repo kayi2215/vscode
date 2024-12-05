@@ -1,0 +1,14 @@
+{
+  "name": "vscode-chat-server",
+  "version": "1.0.0",
+  "description": "AI Chat Server for VS Code Extension",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1",
+    "openai": "^4.0.0",
+    "ws": "^8.14.2"
+  }
+}

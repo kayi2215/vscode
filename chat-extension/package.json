@@ -1,0 +1,38 @@
+{
+  "name": "vscode-chat-plugin",
+  "displayName": "VS Code Chat Plugin",
+  "description": "A chat plugin for VS Code with AI capabilities",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "*"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-chat-plugin.startChat",
+        "category": "Chat",
+        "title": "Open AI Chat"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "vscode-chat-plugin.startChat",
+        "key": "ctrl+shift+c",
+        "mac": "cmd+shift+c"
+      }
+    ]
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.95.0"
+  }
+}
