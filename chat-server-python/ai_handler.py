@@ -56,6 +56,9 @@ class AIHandler:
                         tool_call["params"]["content"]
                     )
                     return result
+                elif tool_call.get("tool") == "list_directory":
+                    result = await self.file_tools.list_directory(tool_call["params"]["path"])
+                    return result
                 return assistant_message
 
             except json.JSONDecodeError:
