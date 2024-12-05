@@ -68,13 +68,13 @@ function activate(context) {
                     .received { 
                         background: var(--vscode-input-background);
                         align-self: flex-start;
+                        width: 100%;
                     }
                     .tool-output {
                         font-family: monospace;
                         white-space: pre-wrap;
                         background: var(--vscode-editor-background);
                         border: 1px solid var(--vscode-input-border);
-                        padding: 15px;
                         border-radius: 8px;
                         width: 100%;
                         box-sizing: border-box;
@@ -84,10 +84,45 @@ function activate(context) {
                         background: var(--vscode-editor-background);
                         border: 1px solid var(--vscode-input-border);
                         border-radius: 10px;
-                        padding: 15px;
                         margin-top: 10px;
                         width: 100%;
                         box-sizing: border-box;
+                    }
+                    .tool-output-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 8px 15px;
+                        background: var(--vscode-editor-lineHighlightBackground);
+                        border-bottom: 1px solid var(--vscode-input-border);
+                        border-radius: 10px 10px 0 0;
+                    }
+                    .tool-output-title {
+                        font-size: 12px;
+                        color: var(--vscode-foreground);
+                        font-weight: 500;
+                    }
+                    .tool-output-actions {
+                        display: flex;
+                        gap: 8px;
+                    }
+                    .tool-output-button {
+                        padding: 4px 8px;
+                        font-size: 11px;
+                        color: var(--vscode-button-foreground);
+                        background: var(--vscode-button-background);
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        display: flex;
+                        align-items: center;
+                        gap: 4px;
+                    }
+                    .tool-output-button:hover {
+                        background: var(--vscode-button-hoverBackground);
+                    }
+                    .tool-output-content {
+                        padding: 15px;
                     }
                     .tool-output-item {
                         display: flex;
@@ -132,6 +167,21 @@ function activate(context) {
                         const lines = content.split('\\n');
                         let html = '<div class="tool-output-card">';
                         
+                        html += \`
+                            <div class="tool-output-header">
+                                <span class="tool-output-title">Directory Listing</span>
+                                <div class="tool-output-actions">
+                                    <button class="tool-output-button" onclick="copyToClipboard(this)">
+                                        <span>📋</span> Copy
+                                    </button>
+                                    <button class="tool-output-button">
+                                        <span>📥</span> Insert
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tool-output-content">
+                        \`;
+                        
                         lines.forEach(line => {
                             const isFile = line.includes('[FILE]');
                             const isDir = line.includes('[DIR]');
@@ -147,7 +197,24 @@ function activate(context) {
                             }
                         });
                         
-                        return html + '</div>';
+                        html += '</div></div>';
+                        return html;
+                    }
+
+                    function copyToClipboard(button) {
+                        const card = button.closest('.tool-output-card');
+                        const content = card.querySelector('.tool-output-content');
+                        const text = Array.from(content.querySelectorAll('.tool-output-item'))
+                            .map(item => item.textContent.trim())
+                            .join('\\n');
+                        
+                        navigator.clipboard.writeText(text).then(() => {
+                            const originalText = button.innerHTML;
+                            button.innerHTML = '<span>✓</span> Copied!';
+                            setTimeout(() => {
+                                button.innerHTML = originalText;
+                            }, 2000);
+                        });
                     }
 
                     function addMessage(text, type, isToolOutput = false) {
