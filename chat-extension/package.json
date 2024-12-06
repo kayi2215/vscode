@@ -1,18 +1,40 @@
 {
   "name": "vscode-chat-plugin",
   "displayName": "Chat Plugin",
+  "description": "A VS Code extension for chatting with an AI assistant",
   "version": "0.0.1",
   "publisher": "younesbami",
-  "engines": {
-    "vscode": "^1.60.0"
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/younesbami/vscode-chat-plugin.git"
   },
-  "activationEvents": ["*"],
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "main": "./extension.js",
   "contributes": {
-    "commands": [{
-      "command": "vscode-chat-plugin.startChat",
-      "title": "Open AI Chat"
-    }]
+    "commands": [
+      {
+        "command": "vscode-chat-plugin.startChat",
+        "title": "Open AI Chat",
+        "category": "Chat"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "vscode-chat-plugin.startChat",
+        "key": "ctrl+i",
+        "mac": "cmd+i",
+        "when": "editorFocus"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
