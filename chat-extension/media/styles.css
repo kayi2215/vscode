@@ -204,6 +204,68 @@ body {
     width: 100%;
 }
 
+/* Styles pour la carte de contenu de fichier */
+.file-content-card {
+    background-color: var(--vscode-editor-background);
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 6px;
+    margin: 10px 0;
+    overflow: hidden;
+}
+
+.file-content-header {
+    background-color: var(--vscode-titleBar-activeBackground);
+    padding: 8px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.file-name {
+    font-weight: 500;
+    color: var(--vscode-titleBar-activeForeground);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.file-action-button {
+    background: none;
+    border: none;
+    color: var(--vscode-titleBar-activeForeground);
+    padding: 4px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.file-action-button:hover {
+    background-color: var(--vscode-titleBar-inactiveBackground);
+}
+
+.file-content {
+    margin: 0;
+    padding: 12px;
+    overflow-x: auto;
+    font-family: var(--vscode-editor-font-family);
+    font-size: var(--vscode-editor-font-size);
+    line-height: 1.4;
+    color: var(--vscode-editor-foreground);
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;

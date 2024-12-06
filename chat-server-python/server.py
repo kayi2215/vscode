@@ -40,8 +40,24 @@ class ChatServer:
                         pass
                 
                 # Pour les autres messages, traitement normal
-                response = await self.ai_handler.process_message(data['content'])
+                response = await self.ai_handler.process_message(content)
                 print(f"Réponse: {response}")
+                
+                # Si la réponse est une commande JSON, l'exécuter directement
+                try:
+                    command = json.loads(response)
+                    if isinstance(command, dict) and command.get('tool') == 'read_file':
+                        print("Exécution de la commande read_file")
+                        file_content = await self.file_manager.read_file(command['params']['path'])
+                        await websocket.send(json.dumps({
+                            'type': 'tool_output',
+                            'content': f"Contenu du fichier {command['params']['path']}:\n{file_content}"
+                        }))
+                        return
+                except json.JSONDecodeError:
+                    pass
+                
+                # Sinon, envoyer la réponse normale
                 await websocket.send(json.dumps({
                     'type': 'ai-message',
                     'content': response

@@ -18,10 +18,16 @@ class AIHandler:
         base_dir = config('ALLOWED_DIRECTORY', default='.')
         return f"""Assistant VS Code avec accès au système de fichiers dans {base_dir}.
         
-        Outils disponibles :
+        Quand l'utilisateur demande de lire un fichier, vous DEVEZ répondre avec la commande JSON suivante :
+        {{"tool": "read_file", "params": {{"path": "chemin_du_fichier"}}}}
+        
+        Exemple :
+        - Si l'utilisateur dit "lis le fichier test.txt", répondre : {{"tool": "read_file", "params": {{"path": "test.txt"}}}}
+        - Si l'utilisateur dit "montre le contenu de config.json", répondre : {{"tool": "read_file", "params": {{"path": "config.json"}}}}
+        
+        Autres outils disponibles :
         - create_directory(path): Créer un dossier
         - write_file(path, content): Écrire dans un fichier
-        - read_file(path): Lire un fichier
         - list_directory(path): Lister le contenu
         - delete_file(path): Supprimer un fichier ou dossier
         
@@ -33,6 +39,19 @@ class AIHandler:
 
     async def process_message(self, message: str) -> str:
         try:
+            # Détecter si c'est une demande de lecture de fichier
+            if any(keyword in message.lower() for keyword in ['lis', 'lire', 'montre', 'affiche', 'contenu']):
+                if '.txt' in message or '.json' in message or '.py' in message:
+                    # Extraire le nom du fichier
+                    words = message.split()
+                    for word in words:
+                        if any(ext in word for ext in ['.txt', '.json', '.py']):
+                            return json.dumps({
+                                "tool": "read_file",
+                                "params": {"path": word}
+                            })
+
+            # Si ce n'est pas une demande de lecture de fichier, traiter normalement
             self.conversation_history.append({"role": "user", "content": message})
             
             response = await self.client.chat.completions.create(
@@ -57,15 +76,9 @@ class AIHandler:
                         tool_call["params"]["content"]
                     )
                     return result
-                elif tool_call.get("tool") == "read_file":
-                    result = await self.file_manager.read_file(tool_call["params"]["path"])
-                    return result
                 elif tool_call.get("tool") == "list_directory":
                     result = await self.file_manager.list_directory(tool_call["params"]["path"])
                     return result
-                elif tool_call.get("tool") == "delete_file":
-                    result = await self.file_manager.delete_file(tool_call["params"]["path"])
-                    return result["message"]
                 return assistant_message
 
             except json.JSONDecodeError:

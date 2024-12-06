@@ -3,11 +3,15 @@ const vscode = acquireVsCodeApi();
 
 function formatToolOutput(content) {
     console.log('Formatting content:', content);
+    console.log('Content type:', typeof content);
+    console.log('Content starts with "Contenu du fichier"?', content.startsWith('Contenu du fichier'));
+    console.log('Content includes [FILE]?', content.includes('[FILE]'));
+    console.log('Content includes [DIR]?', content.includes('[DIR]'));
+    console.log('Content includes read_file?', content.includes('{"tool": "read_file"'));
     
     // Format file listing if the content matches the pattern
     if (content.includes('[FILE]') || content.includes('[DIR]')) {
         console.log('Detected file/dir pattern');
-        // Séparer d'abord par les retours à la ligne, puis par les espaces
         const lines = content.split('\n');
         const formattedItems = [];
         
@@ -28,21 +32,62 @@ function formatToolOutput(content) {
             }
         }
         
-        console.log('Formatted items:', formattedItems);
-        content = formattedItems.join('');
+        // Encapsuler la liste des fichiers dans une carte d'outil
+        return `
+            <div class="tool-output-card">
+                <div class="tool-output-header">
+                    <span class="tool-output-title">Output</span>
+                    <div class="tool-output-actions">
+                        <button class="tool-output-button" onclick="copyToClipboard(this)">
+                            <span class="button-icon">📋</span>
+                            <span>Copy</span>
+                        </button>
+                        <button class="tool-output-button" onclick="insertToEditor(this)">
+                            <span class="button-icon">📝</span>
+                            <span>Insert</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="tool-output">${formattedItems.join('')}</div>
+            </div>
+        `;
+    } else if (content.startsWith('Contenu du fichier')) {
+        console.log('Detected file content');
+        // Extraire le nom du fichier et le contenu
+        const fileNameMatch = content.match(/Contenu du fichier (.*?):/);
+        console.log('File name match:', fileNameMatch);
+        const fileName = fileNameMatch ? fileNameMatch[1] : 'fichier';
+        console.log('File name:', fileName);
+        const fileContent = content.substring(content.indexOf('\n') + 1);
+        console.log('File content:', fileContent);
+        
+        // Retourner directement la carte de fichier sans l'encapsuler
+        return `
+            <div class="file-content-card">
+                <div class="file-content-header">
+                    <span class="file-name">📄 ${fileName}</span>
+                    <div class="file-actions">
+                        <button class="file-action-button" onclick="copyToClipboard(this.parentElement.parentElement.nextElementSibling)">
+                            <span class="button-icon">📋</span>
+                            <span>Copier</span>
+                        </button>
+                        <button class="file-action-button" onclick="insertToEditor(this.parentElement.parentElement.nextElementSibling)">
+                            <span class="button-icon">📝</span>
+                            <span>Insérer</span>
+                        </button>
+                    </div>
+                </div>
+                <pre class="file-content">${fileContent}</pre>
+            </div>
+        `;
     } else if (content.includes('{"tool": "read_file"')) {
+        console.log('Detected read_file command');
         // Ne pas formater la commande JSON, attendre le contenu réel
-        content = '<div class="loading">Chargement du contenu du fichier...</div>';
-    } else if (content.includes('Contenu du fichier')) {
-        // Extraire et formater le contenu réel du fichier
-        const contentStart = content.indexOf(':');
-        if (contentStart !== -1) {
-            content = content.substring(contentStart + 1).trim();
-        }
-        content = `<pre class="file-content">${content}</pre>`;
+        return '<div class="loading">Chargement du contenu du fichier...</div>';
     }
 
-    const output = `
+    // Pour tout autre contenu, utiliser la carte d'outil standard
+    return `
         <div class="tool-output-card">
             <div class="tool-output-header">
                 <span class="tool-output-title">Output</span>
@@ -60,8 +105,6 @@ function formatToolOutput(content) {
             <div class="tool-output">${content}</div>
         </div>
     `;
-    console.log('Final output:', output);
-    return output;
 }
 
 function addMessage(text, type, isToolOutput = false) {
