@@ -4,7 +4,7 @@ const WebSocket = require('ws');
 function activate(context) {
     console.log('Extension activating');
 
-    let disposable = vscode.commands.registerCommand('vscode-chat-plugin.startChat', () => {
+    let disposable = vscode.commands.registerCommand('chat-extension.startChat', () => {
         const panel = vscode.window.createWebviewPanel(
             'chatView',
             'Chat',

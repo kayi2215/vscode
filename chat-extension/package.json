@@ -22,7 +22,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "vscode-chat-plugin.startChat",
+        "command": "chat-extension.startChat",
         "title": "Open AI Chat",
         "category": "Chat",
         "icon": "$(comment-discussion)"
@@ -30,7 +30,7 @@
     ],
     "keybindings": [
       {
-        "command": "vscode-chat-plugin.startChat",
+        "command": "chat-extension.startChat",
         "key": "ctrl+i",
         "mac": "cmd+i",
         "when": "editorFocus || editorIsOpen"
