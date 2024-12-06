@@ -19,17 +19,17 @@ function formatToolOutput(content) {
                 const nextItem = items[i + 1];
                 
                 if (item === '[FILE]' && nextItem) {
-                    formattedItems.push(`<span class="file-item">📄 ${nextItem}</span>`);
+                    formattedItems.push(`<div class="file-item">📄 ${nextItem}</div>`);
                     i++; // Skip the next item as we've already processed it
                 } else if (item === '[DIR]' && nextItem) {
-                    formattedItems.push(`<span class="dir-item">📁 ${nextItem}</span>`);
+                    formattedItems.push(`<div class="dir-item">📁 ${nextItem}</div>`);
                     i++; // Skip the next item as we've already processed it
                 }
             }
         }
         
         console.log('Formatted items:', formattedItems);
-        content = formattedItems.join('  '); // Utiliser deux espaces pour séparer les éléments
+        content = formattedItems.join(''); // Pas besoin d'espaces car chaque élément est dans un div
     }
 
     const output = `
