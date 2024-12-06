@@ -2,7 +2,7 @@ from openai import AsyncOpenAI
 from decouple import config
 import httpx
 import json
-from file_tools import FileTools
+from file_manager import FileManager
 import os
 
 class AIHandler:
@@ -11,7 +11,7 @@ class AIHandler:
             api_key=config('OPENAI_API_KEY'),
             http_client=httpx.AsyncClient()
         )
-        self.file_tools = FileTools([config('ALLOWED_DIRECTORY', default='.')])
+        self.file_manager = FileManager([config('ALLOWED_DIRECTORY', default='.')])
         self.conversation_history = []
         
     def _create_system_prompt(self):
@@ -23,6 +23,7 @@ class AIHandler:
         - write_file(path, content): Écrire dans un fichier
         - read_file(path): Lire un fichier
         - list_directory(path): Lister le contenu
+        - delete_file(path): Supprimer un fichier ou dossier
         
         Pour créer un fichier dans un nouveau dossier :
         1. Utiliser create_directory
@@ -48,17 +49,23 @@ class AIHandler:
             try:
                 tool_call = json.loads(assistant_message)
                 if tool_call.get("tool") == "create_directory":
-                    result = await self.file_tools.create_directory(tool_call["params"]["path"])
+                    result = await self.file_manager.create_directory(tool_call["params"]["path"])
                     return result
                 elif tool_call.get("tool") == "write_file":
-                    result = await self.file_tools.write_file(
+                    result = await self.file_manager.write_file(
                         tool_call["params"]["path"],
                         tool_call["params"]["content"]
                     )
                     return result
-                elif tool_call.get("tool") == "list_directory":
-                    result = await self.file_tools.list_directory(tool_call["params"]["path"])
+                elif tool_call.get("tool") == "read_file":
+                    result = await self.file_manager.read_file(tool_call["params"]["path"])
                     return result
+                elif tool_call.get("tool") == "list_directory":
+                    result = await self.file_manager.list_directory(tool_call["params"]["path"])
+                    return result
+                elif tool_call.get("tool") == "delete_file":
+                    result = await self.file_manager.delete_file(tool_call["params"]["path"])
+                    return result["message"]
                 return assistant_message
 
             except json.JSONDecodeError:

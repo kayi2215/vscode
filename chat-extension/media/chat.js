@@ -29,7 +29,17 @@ function formatToolOutput(content) {
         }
         
         console.log('Formatted items:', formattedItems);
-        content = formattedItems.join(''); // Pas besoin d'espaces car chaque élément est dans un div
+        content = formattedItems.join('');
+    } else if (content.includes('{"tool": "read_file"')) {
+        // Ne pas formater la commande JSON, attendre le contenu réel
+        content = '<div class="loading">Chargement du contenu du fichier...</div>';
+    } else if (content.includes('Contenu du fichier')) {
+        // Extraire et formater le contenu réel du fichier
+        const contentStart = content.indexOf(':');
+        if (contentStart !== -1) {
+            content = content.substring(contentStart + 1).trim();
+        }
+        content = `<pre class="file-content">${content}</pre>`;
     }
 
     const output = `

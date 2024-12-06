@@ -53,16 +53,29 @@ function activate(context) {
                 if (Array.isArray(content)) {
                     content = content.join(' ');
                 }
-                
-                // Si le contenu contient [FILE] ou [DIR], traiter comme tool_output
-                if (content && (content.includes('[FILE]') || content.includes('[DIR]'))) {
-                    console.log('Detected file listing, treating as tool output');
-                    panel.webview.postMessage({
-                        type: 'addToolResponse',
-                        text: content
-                    });
-                } else if (message.type === 'tool_output') {
-                    console.log('Processing tool output:', message);
+
+                // Si le contenu est une commande JSON de lecture de fichier, extraire le contenu réel
+                if (typeof content === 'string' && content.includes('{"tool": "read_file"')) {
+                    try {
+                        const fileCommand = JSON.parse(content);
+                        if (fileCommand.tool === 'read_file') {
+                            // Attendre la réponse du serveur avec le contenu réel
+                            return;
+                        }
+                    } catch (e) {
+                        // Si ce n'est pas un JSON valide, traiter comme contenu normal
+                        console.log('Not a valid JSON command:', e);
+                    }
+                }
+
+                // Si le contenu contient [FILE] ou [DIR], ou si c'est une lecture de fichier
+                if (content && (
+                    content.includes('[FILE]') || 
+                    content.includes('[DIR]') || 
+                    message.type === 'tool_output' ||
+                    (typeof content === 'string' && content.includes('Contenu du fichier'))
+                )) {
+                    console.log('Detected file listing or file content, treating as tool output');
                     panel.webview.postMessage({
                         type: 'addToolResponse',
                         text: content

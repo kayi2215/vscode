@@ -189,6 +189,21 @@ body {
     background-color: var(--vscode-list-hoverBackground);
 }
 
+.file-content {
+    font-family: var(--vscode-editor-font-family);
+    background-color: var(--vscode-editor-background);
+    color: var(--vscode-editor-foreground);
+    padding: 8px;
+    margin: 0;
+    border-radius: 4px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: var(--vscode-editor-font-size);
+    line-height: 1.4;
+    width: 100%;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
     width: 8px;
