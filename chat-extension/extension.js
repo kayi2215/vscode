@@ -87,14 +87,22 @@ function activate(context) {
 
         panel.webview.onDidReceiveMessage(
             message => {
-                if (message.command === 'sendMessage') {
-                    console.log('Sending to server:', message.text);
-                    ws.send(JSON.stringify({
-                        type: 'user-message',
-                        content: message.text
-                    }));
-                } else if (message.command === 'insertToEditor') {
-                    vscode.commands.executeCommand('chat-extension.insertToEditor', message.text);
+                switch (message.command) {
+                    case 'sendMessage':
+                        console.log('Sending message to server:', message.text);
+                        ws.send(JSON.stringify({
+                            type: 'user-message',
+                            content: message.text
+                        }));
+                        break;
+                    case 'insertToEditor':
+                        const editor = vscode.window.activeTextEditor;
+                        if (editor) {
+                            editor.edit(editBuilder => {
+                                editBuilder.insert(editor.selection.active, message.text);
+                            });
+                        }
+                        break;
                 }
             },
             undefined,

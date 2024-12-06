@@ -110,6 +110,10 @@ document.addEventListener('DOMContentLoaded', () => {
     function sendMessage() {
         const text = messageInput.value.trim();
         if (text) {
+            // Afficher d'abord le message localement
+            addMessage(text, 'sent');
+            
+            // Puis l'envoyer au serveur
             vscode.postMessage({
                 command: 'sendMessage',
                 text: text
@@ -130,9 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle messages from the extension
     window.addEventListener('message', event => {
         const message = event.data;
+        console.log('Received message from extension:', message);
         switch (message.type) {
             case 'addMessage':
-                addMessage(message.text, message.messageType === 'user' ? 'sent' : 'received');
+                // Ne pas ajouter le message si c'est un message utilisateur (déjà affiché)
+                if (message.messageType !== 'user') {
+                    addMessage(message.text, message.messageType === 'user' ? 'sent' : 'received');
+                }
                 break;
             case 'addToolResponse':
                 addMessage(message.text, 'received', true);
