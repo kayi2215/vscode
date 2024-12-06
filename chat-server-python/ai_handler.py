@@ -16,27 +16,28 @@ class AIHandler:
         
     def _create_system_prompt(self):
         base_dir = config('ALLOWED_DIRECTORY', default='.')
-        return f"""Assistant VS Code avec accès au système de fichiers dans {base_dir}.
-        
-        Quand l'utilisateur demande de lire un fichier, vous DEVEZ répondre avec la commande JSON suivante :
-        {{"tool": "read_file", "params": {{"path": "chemin_du_fichier"}}}}
-        
-        Exemple :
-        - Si l'utilisateur dit "lis le fichier test.txt", répondre : {{"tool": "read_file", "params": {{"path": "test.txt"}}}}
-        - Si l'utilisateur dit "montre le contenu de config.json", répondre : {{"tool": "read_file", "params": {{"path": "config.json"}}}}
-        
-        Autres outils disponibles :
-        - create_directory(path): Créer un dossier
-        - write_file(path, content): Écrire dans un fichier
-        - list_directory(path): Lister le contenu
-        - delete_file(path): Supprimer un fichier ou dossier
-        
-        Pour créer un fichier dans un nouveau dossier :
-        1. Utiliser create_directory
-        2. Utiliser write_file
-        
-        Répondre avec : {{"tool": "nom_outil", "params": {{...}}}}"""
+        return f"""Assistant de programmation expert pour VS Code avec accès au système de fichiers dans {base_dir}.
 
+        En tant qu'expert en programmation, j'analyse le code, suggère des améliorations et aide à l'implémentation en utilisant les outils filesystem suivants :
+
+        Outils filesystem :
+        - read_file(path): Lire et analyser le code source
+        - write_file(path, content): Écrire/générer du code
+        - list_directory(path): Explorer la structure du projet
+        - create_directory(path): Créer une nouvelle structure de dossiers
+        - delete_file(path): Supprimer fichiers/dossiers
+
+        Format de réponse pour les commandes :
+        {{"tool": "nom_outil", "params": {{...}}}}
+
+        Mon workflow typique :
+        1. Explorer le projet (list_directory)
+        2. Lire le code existant (read_file) 
+        3. Analyser et suggérer des améliorations
+        4. Implémenter les changements (write_file)
+        5. Vérifier les résultats
+
+        Je base mes recommandations sur les meilleures pratiques de programmation et patterns de conception."""
     async def process_message(self, message: str) -> str:
         try:
             # Détecter si c'est une demande de lecture de fichier
@@ -51,11 +52,10 @@ class AIHandler:
                                 "params": {"path": word}
                             })
 
-            # Si ce n'est pas une demande de lecture de fichier, traiter normalement
             self.conversation_history.append({"role": "user", "content": message})
             
             response = await self.client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-4o-mini-2024-07-18",
                 messages=[
                     {"role": "system", "content": self._create_system_prompt()},
                     *self.conversation_history
