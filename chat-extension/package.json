@@ -1,5 +1,5 @@
 {
-  "name": "vscode-chat-plugin",
+  "name": "chat-extension",
   "displayName": "Chat Plugin",
   "description": "A VS Code extension for chatting with an AI assistant",
   "version": "0.0.1",
@@ -26,6 +26,11 @@
         "title": "Open AI Chat",
         "category": "Chat",
         "icon": "$(comment-discussion)"
+      },
+      {
+        "command": "chat-extension.insertToEditor",
+        "title": "Insert Text to Editor",
+        "category": "Chat"
       }
     ],
     "keybindings": [
@@ -41,7 +46,7 @@
     "vscode:prepublish": "npm install",
     "compile": "echo Compiled",
     "package": "vsce package",
-    "install-ext": "npm install && vsce package && code --install-extension vscode-chat-plugin-0.0.1.vsix"
+    "install-ext": "npm install && vsce package && code --install-extension chat-extension-0.0.1.vsix"
   },
   "dependencies": {
     "ws": "^8.2.3"
