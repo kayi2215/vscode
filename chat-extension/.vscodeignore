@@ -1,4 +1,12 @@
 .vscode/**
-node_modules/**
-.vscodeignore
+.vscode-test/**
 .gitignore
+.yarnrc
+vsc-extension-quickstart.md
+**/tsconfig.json
+**/*.map
+**/*.ts
+node_modules/@vscode/**
+node_modules/@types/**
+node_modules/typescript/**
+!node_modules/ws/**

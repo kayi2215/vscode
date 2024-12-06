@@ -24,7 +24,8 @@
       {
         "command": "vscode-chat-plugin.startChat",
         "title": "Open AI Chat",
-        "category": "Chat"
+        "category": "Chat",
+        "icon": "$(comment-discussion)"
       }
     ],
     "keybindings": [
@@ -32,14 +33,15 @@
         "command": "vscode-chat-plugin.startChat",
         "key": "ctrl+i",
         "mac": "cmd+i",
-        "when": "editorFocus"
+        "when": "editorFocus || editorIsOpen"
       }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "npm run compile",
+    "vscode:prepublish": "npm install",
     "compile": "echo Compiled",
-    "package": "vsce package"
+    "package": "vsce package",
+    "install-ext": "npm install && vsce package && code --install-extension vscode-chat-plugin-0.0.1.vsix"
   },
   "dependencies": {
     "ws": "^8.2.3"
